@@ -19,13 +19,13 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 
 [image1]: ./cnn-architecture-624x890.png "Model Visualization"
-[image2]: ./examples/placeholder.png "Center lane driving"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
-[image7]: ./examples/placeholder_small.png "Flipped Image"
-[image8]: ./examples/placeholder_small.png "Training and Validation Accuracy"
+[image2]: ./examples/center_2017_11_04_13_11_27_531.jpg "Center lane driving"
+[image3]: ./examples/center_2017_11_11_20_57_10_321_side.jpg "Recovery Image"
+[image4]: ./examples/center_2017_11_11_20_57_37_043_side.jpg "Recovery Image"
+[image5]: ./examples/center_2017_11_11_20_57_42_236_side.jpg "Recovery Image"
+[image6]: ./examples/center_2017_11_11_20_57_35_684.jpg "Normal Image"
+[image7]: ./examples/center_2017_11_11_20_57_35_684_flip.jpg "Flipped Image"
+[image8]: ./examples/stats.png "Training and Validation Accuracy"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
