@@ -58,94 +58,131 @@ pickle.dump( dist_pickle, open( "output_images/cal_dist_pickle.p", "wb" ) )
        
 # 2. Distortion correction
 # Test undistortion on an image
-img = cv2.imread('test_images/test1.jpg')
+img = cv2.imread('test_images/test2.jpg')
 # undistort test image
 undist = cv2.undistort(img, mtx, dist, None, mtx)
-cv2.imwrite('output_images/undist.jpg',undist)
+cv2.imwrite('output_images/test2_undist.jpg',undist)
 # Visualize undistortion   
 undist = cv2.cvtColor(undist, cv2.COLOR_BGR2RGB) #convert to RGB
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-# f, (ax1, ax2) = plt.subplots(1, 2, figsize=(20,10))
-# ax1.imshow(img)
-# ax1.set_title('Original Image', fontsize=30)
-# ax2.imshow(undist)
-# ax2.set_title('Undistorted Image', fontsize=30)
-# pyplot.savefig('output_images/vs_undistort.png')
+f, (ax1, ax2) = plt.subplots(1, 2, figsize=(20,10))
+ax1.imshow(img)
+ax1.set_title('Original Image', fontsize=30)
+ax2.imshow(undist)
+ax2.set_title('Undistorted Image', fontsize=30)
+pyplot.savefig('output_images/test2_vs_undistort.png')
   
-  
+def select_yellow(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    lower = np.array([20,60,60])
+    upper = np.array([38,174, 250])
+    mask = cv2.inRange(hsv, lower, upper)
+    
+    return mask
+
+def select_white(image):
+    lower = np.array([202,202,202])
+    upper = np.array([255,255,255])
+    mask = cv2.inRange(image, lower, upper)
+    
+    return mask
+
+img = mpimg.imread('output_images/test2_undist.jpg')
+def doubleThreshold(image):
+    yellow = select_yellow(image)
+    white = select_white(image)
+    
+    combined_binary = np.zeros_like(yellow)
+    combined_binary[(yellow >= 1) | (white >= 1)] = 255
+    
+    return combined_binary  
+threshed=doubleThreshold(img)
+cv2.imwrite('output_images/test2_undist_thresh.jpg',threshed)
+
 # 3. Color/gradient threshold
 # Read in an image and grayscale it
-img = mpimg.imread('output_images/undist.jpg')
-def doubleThreshold(img):
-    # Convert to HLS color space and separate the S channel
-    # Note: img is the undistorted image
-    hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
-    s_channel = hls[:,:,2]
-      
-    # Grayscale image
-    # NOTE: we already saw that standard grayscaling lost color information for the lane lines
-    # Explore gradients in other colors spaces / color channels to see what might work better
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-      
-    # Sobel x
-    sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0) # Take the derivative in x
-    abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
-    scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
-      
-    # Threshold x gradient
-    thresh_min = 30
-    thresh_max = 100
-    sxbinary = np.zeros_like(scaled_sobel)
-    sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
-      
-    # Threshold color channel
-    s_thresh_min = 170
-    s_thresh_max = 255
-    s_binary = np.zeros_like(s_channel)
-    s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 1     
-    # Combine the two binary thresholds
-    combined_binary = np.zeros_like(sxbinary)
-    combined_binary[(s_binary == 1) | (sxbinary == 1)] = 255
-    print(np.shape(combined_binary))
-    return combined_binary
-
-threshed=doubleThreshold(img)
-cv2.imwrite('output_images/undist_thresh.jpg',threshed)
-# Plotting thresholded images
+# img = mpimg.imread('output_images/cal_undist.jpg')
+# def doubleThreshold(img):
+#     # Convert to HLS color space and separate the S channel
+#     # Note: img is the undistorted image
+#     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+#     s_channel = hls[:,:,2]
+#       
+#     # Grayscale image
+#     # NOTE: we already saw that standard grayscaling lost color information for the lane lines
+#     # Explore gradients in other colors spaces / color channels to see what might work better
+#     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+#       
+#     # Sobel x
+#     sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0) # Take the derivative in x
+#     abs_sobelx = np.absolute(sobelx) # Absolute x derivative to accentuate lines away from horizontal
+#     scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+#       
+#     # Threshold x gradient
+#     thresh_min = 30
+#     thresh_max = 100
+#     sxbinary = np.zeros_like(scaled_sobel)
+#     sxbinary[(scaled_sobel >= thresh_min) & (scaled_sobel <= thresh_max)] = 1
+#       
+#     # Threshold color channel
+#     s_thresh_min = 170
+#     s_thresh_max = 255
+#     s_binary = np.zeros_like(s_channel)
+#     s_binary[(s_channel >= s_thresh_min) & (s_channel <= s_thresh_max)] = 1     
+#     # Combine the two binary thresholds
+#     combined_binary = np.zeros_like(sxbinary)
+#     combined_binary[(s_binary == 1) | (sxbinary == 1)] = 255
+#     print(np.shape(combined_binary))
+#     return combined_binary
+# 
+# threshed=doubleThreshold(img)
+# cv2.imwrite('output_images/cal_undist_thresh.jpg',threshed)
+# #Plotting thresholded images
 # fig = plt.figure()
 # plt.title('Combined S channel and gradient thresholds')
 # plt.imshow(threshed, cmap='gray')
 # plt.show()
-# pyplot.savefig('output_images/undist_thresh.png')
+# pyplot.savefig('output_images/cal_undist_thresh.png')
  
  
 # 4. Perspective Transform
 # Read image from last step
 img = mpimg.imread('output_images/undist_thresh.jpg')
 def perspectiveTrans(img):
-    offset=50
-    up=np.int(0.65*img_size[1]) #vertical height
-    down=np.int(img_size[1])
-    leftup=np.int(0.45*img_size[0]) #horizontal
-    leftdown=np.int(0.2*img_size[0])
-    rightup=np.int(0.6*img_size[0])
-    rightdown=np.int(0.85*img_size[0])
-    hist_leftup = np.sum(img[up:(up+offset),leftup-offset:leftup], axis=0)
-    hist_leftdown = np.sum(img[down-offset:down,leftdown:leftdown+offset], axis=0)
-    hist_rightup = np.sum(img[up:(up+offset),rightup:rightup+offset], axis=0)
-    hist_rightdown = np.sum(img[down-offset:down,rightdown-offset:rightdown], axis=0)
-     
-    leftup = np.argmax(hist_leftup)+leftup-offset #argmax returns index of max value
-    leftdown = np.argmax(hist_leftdown)+leftdown-offset
-    rightup = np.argmax(hist_rightup)+rightup-offset
-    rightdown = np.argmax(hist_rightdown)+rightdown-offset
-    #
-    src = np.float32([[leftup,up], [rightup,up], [leftdown,down], [rightdown,down]])
-    dst = np.float32([[leftdown, 0], [rightdown,0], [leftdown, down], [rightdown,down]])
+#     offset=50
+#     up=np.int(0.65*img_size[1]) #vertical height
+#     down=np.int(img_size[1])
+#     leftup=np.int(0.45*img_size[0]) #horizontal
+#     leftdown=np.int(0.2*img_size[0])
+#     rightup=np.int(0.6*img_size[0])
+#     rightdown=np.int(0.85*img_size[0])
+#     hist_leftup = np.sum(img[up:(up+offset),leftup-offset:leftup], axis=0)
+#     hist_leftdown = np.sum(img[down-offset:down,leftdown:leftdown+offset], axis=0)
+#     hist_rightup = np.sum(img[up:(up+offset),rightup:rightup+offset], axis=0)
+#     hist_rightdown = np.sum(img[down-offset:down,rightdown-offset:rightdown], axis=0)
+#      
+#     leftup = np.argmax(hist_leftup)+leftup-offset #argmax returns index of max value
+#     leftdown = np.argmax(hist_leftdown)+leftdown-offset
+#     rightup = np.argmax(hist_rightup)+rightup-offset
+#     rightdown = np.argmax(hist_rightdown)+rightdown-offset
+#     #
+#     src = np.float32([[leftup,up], [rightup,up], [leftdown,down], [rightdown,down]])
+#     dst = np.float32([[leftdown, 0], [rightdown,0], [leftdown, down], [rightdown,down]])
     #src = np.float32([[599,447], [680,447], [227,704], [1065,704]])
-    #print(src)
-    #print(dst)
+    
+    src = np.float32([[545, 460],
+                    [735, 460],
+                    [1280, 700],
+                    [0, 700]])
+
+    dst = np.float32([[0, 0],
+                     [1280, 0],
+                     [1280, 720],
+                     [0, 720]])
+    
+#     print(src)
+#     print(dst)
     # Given src and dst points, calculate the perspective transform matrix
     M = cv2.getPerspectiveTransform(src, dst)
     MInv = cv2.getPerspectiveTransform(dst,src)
@@ -155,7 +192,7 @@ def perspectiveTrans(img):
     return warped, org, MInv
 
 warped, org, MInv = perspectiveTrans(img)
-# cv2.imwrite('output_images/undist_thresh_transform.jpg',warped)
+cv2.imwrite('output_images/test2_undist_thresh_transform.jpg',warped)
 # cv2.imwrite('output_images/undist_thresh_invtrans.jpg',org)
 
 
@@ -450,7 +487,7 @@ frame=0
 lastFrame={}
 
 from moviepy.editor import VideoFileClip
-clip1 = VideoFileClip("project_video.mp4")#.subclip(0,5)
+clip1 = VideoFileClip("project_video.mp4")#.subclip(40,48)
 out_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 video_output = 'output_images/out_project_video.mp4'
 out_clip.write_videofile(video_output, audio=False)
