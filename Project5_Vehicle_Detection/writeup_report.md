@@ -12,8 +12,8 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [image1]: ./examples/car_not_car.png
 [image2]: ./examples/colorConv_Hog.png
-[image3]: ./examples/window_img.jpg
-[image4]: ./examples/test4_sub_sample.jpg
+[image3]: ./examples/window_img.png
+[image4]: ./examples/test4_sub_sample.png
 [image5]: ./examples/test4_CarPos_and_HeatMap.png
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
