@@ -12,9 +12,9 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [image1]: ./examples/car_not_car.png
 [image2]: ./examples/colorConv_Hog.png
-[image3]: ./examples/window_img.jpg
-[image4]: ./examples/test4_sub_sample.jpg
-[image5]: ./examples/test4_CarPos_and_HeatMap.png
+[image3]: ./examples/window_img.png
+[image4]: ./examples/test1_sub_sample_2.png
+[image5]: ./examples/test1_CarPos_and_HeatMap_2.png
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -49,20 +49,20 @@ I tried various combinations of parameters and decided to use `orientations=9`, 
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using HOG features and color features (color binning features and color histogram features) of 6000 vehicles' and 6000 non-vehicles' images with size 64x64.
+I trained a linear SVM using HOG features and color features (color binning features and color histogram features) of 6000 vehicles' and 8800 non-vehicles' images with size 64x64.The images come from datasets downloaded from the course site plus cutouts from the project video.
 The code for this step is contained in lines 259 through 326 of the file called `pipeline.py`.  
 
 ### Sliding Window Search
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I decided to search window positions by window size 64x64 with overlap of 50% all over the image and came up with this:
+I decided to search window positions by window size 64x64, 96x96, 128x128 (realized by setting scale to 1.0, 1.5, 2.0) with overlap of 0,875% (with cells_per_step equal to 1) all over the image and came up with this:
 
 ![alt text][image3]
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on 1.5 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an OK result.  Here are some example images:
+Ultimately I searched on 1.0, 1.5 and 2.0 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an accurate result of vehicle detection.  Here are some example images:
 
 ![alt text][image4]
 ---
@@ -92,5 +92,5 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
-The performance of the vehicle detection on project video is not so good. Even though the classifier accuracy on the test datasets reached 99.5%, when giving a test image to the find_cars() function the detection of vehicles failed most of the times in the video. Due to time constraint, the final output video actually missed detections of many vehicles and output many false positives. Advice on improvement of current performance will be very much appreciated.
+The performance of the vehicle detection on project video was initially not so good. Even though the classifier accuracy on the test datasets reached 99.5% (later figured out because of overfitting), when giving a test image to the find_cars() function the detection of vehicles failed most of the times in the video. Due to time constraint, the previous final output video actually missed detections of many vehicles and output many false positives. After implementing the advice from first submission, the final output video showed correct detection of other vehicles with only a few false positives occasionally.
 
