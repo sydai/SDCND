@@ -10,6 +10,7 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from scipy.ndimage.measurements import label
 from sklearn.model_selection import train_test_split
+from collections import deque
 
 
 #########################lesson_functions#################################
@@ -271,7 +272,7 @@ print(len(cars),cars[0])
 print(len(notcars),notcars[0])
 
 # Reduce the sample size
-sample_size = 8800
+sample_size = 9000
 cars = cars[0:sample_size]
 notcars = notcars[0:sample_size]
 
@@ -550,11 +551,15 @@ pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/CarPos_and_Heat
 
 
 
+history = deque(maxlen = 8)
 def process_image(in_img):
     out_img,box_list=find_cars(in_img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
     heat = np.zeros_like(out_img[:,:,0]).astype(np.float)
     heat = add_heat(heat,box_list)
-    heat = apply_threshold(heat,4)
+    history.append(heat)
+    #print(np.shape(history))
+    history_avg=np.mean(history,axis=0)
+    heat = apply_threshold(history_avg,8)
     heatmap = np.clip(heat, 0, 255)
     labels = label(heatmap)
     draw_img = draw_labeled_bboxes(np.copy(in_img), labels)
@@ -563,7 +568,7 @@ def process_image(in_img):
 
 
 from moviepy.editor import VideoFileClip
-clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4")#.subclip(29,33)
+clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4")#.subclip(27,29)
 out_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 video_output = '/Users/dai/CarND-Vehicle-Detection/out_project_video.mp4'
 out_clip.write_videofile(video_output, audio=False)
