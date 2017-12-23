@@ -76,7 +76,7 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
         # Read in each one by one
         image = mpimg.imread(file)
         # uncomment below line if file is png format
-        #image = 255*image # to scale png file from (0,1) to (0,255)
+        #####image = 255*image # to scale png file from (0,1) to (0,255)
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
             if color_space == 'HSV':
@@ -250,36 +250,33 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
         cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
     # Return the image copy with boxes drawn
     return imcopy
-# End of basic functions    
+# End of basic functions  
 
 
+    
+    
 #os.chdir(r'/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/')
-cars=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/*.png')
+cars=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/video_extracted/*.png')
 cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Right/*.png')
+cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Far/*.png')
+cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Left/*.png')
+cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_MiddleClose/*.png')
+cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/*.png')
 #os.chdir(r'/Users/dai/CarND-Vehicle-Detection/non-vehicles/Extras/')
-notcars=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/Extras/*.png')
+notcars=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/video_extracted/*.png')
 notcars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/GTI/*.png')
-# train the classifier
-# images = glob.glob('*.jpeg')
-# print(len(images))
-# cars = []
-# notcars = []
-# for image in images:
-#     if 'image' in image or 'extra' in image:
-#         notcars.append(image)
-#     else:
-#         cars.append(image)
+notcars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/Extras/*.png')
 
 print(len(cars),cars[0])
 print(len(notcars),notcars[0])
 
 # Reduce the sample size
-sample_size = 6000
+sample_size = 8800
 cars = cars[0:sample_size]
 notcars = notcars[0:sample_size]
 
 ### Tweak these parameters and see how the results change.
-color_space = 'HSV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+color_space = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
 orient = 9  # HOG orientations
 pix_per_cell = 8 # HOG pixels per cell
 cell_per_block = 2 # HOG cells per block
@@ -309,7 +306,7 @@ X = np.vstack((car_features, notcar_features)).astype(np.float64)
 X_scaler = StandardScaler().fit(X)
 # Apply the scaler to X
 scaled_X = X_scaler.transform(X)
-print(len(X_scaler.scale_))
+#print(len(X_scaler.scale_))
 # Define the labels vector
 y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
 
@@ -322,7 +319,7 @@ print('Using:',orient,'orientations',pix_per_cell,
     'pixels per cell and', cell_per_block,'cells per block')
 print('Feature vector length:', len(X_train[0]))
 # Use a linear SVC 
-svc = LinearSVC()
+svc = LinearSVC(C=0.1)
 # Check the training time for the SVC
 t=time.time()
 svc.fit(X_train, y_train)
@@ -334,116 +331,144 @@ print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 t=time.time()
 
 
+  
+image1 = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Right/image0028.png')
+hog_image = convert_color(image1, conv='RGB2YCrCb')
+ch1 = hog_image[:,:,0]
+ch2 = hog_image[:,:,1]
+ch3 = hog_image[:,:,2]
+hog1,hog1_img = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, vis=True,feature_vec=False)
+hog2,hog2_img = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, vis=True,feature_vec=False)
+hog3,hog3_img = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, vis=True,feature_vec=False)
+fig = plt.figure()
+plt.subplot(141)
+plt.imshow(hog_image)
+plt.title('YCrCb image')
+plt.subplot(142)
+plt.imshow(hog1_img)
+plt.title('Ch1 Hog image')
+plt.subplot(143)
+plt.imshow(hog2_img)
+plt.title('Ch2 Hog image')
+plt.subplot(144)
+plt.imshow(hog3_img)
+plt.title('Ch3 Hog image')
+fig.tight_layout()
 
-# # By using search_windows() method
-# image = mpimg.imread('/Users/dai/Project5_vehicle_detection/bbox-example-image.jpg')
-# draw_image = np.copy(image)
-# 
-# # Uncomment the following line if you extracted training
-# # data from .png images (scaled 0 to 1 by mpimg) and the
-# # image you are searching is a .jpg (scaled 0 to 255)
-# image = image.astype(np.float32)/255
-# 
-# windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, 
-#                     xy_window=(96, 96), xy_overlap=(0.5, 0.5))
-# 
-# hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space, 
-#                         spatial_size=spatial_size, hist_bins=hist_bins, 
-#                         orient=orient, pix_per_cell=pix_per_cell, 
-#                         cell_per_block=cell_per_block, 
-#                         hog_channel=hog_channel, spatial_feat=spatial_feat, 
-#                         hist_feat=hist_feat, hog_feat=hog_feat)                       
-# 
-# window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)                    
-# 
-# plt.imshow(window_img)
-# plt.show()
-# pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/window_img.png')
+plt.show()
+pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/colorConv_Hog.png')
+
+
+
+
+# By using search_windows() method
+image2 = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/test_images/test1.jpg')
+draw_image = np.copy(image2)
+ 
+# Uncomment the following line if you extracted training
+# data from .png images (scaled 0 to 1 by mpimg) and the
+# image you are searching is a .jpg (scaled 0 to 255)
+image2 = image2.astype(np.float32)/255
+windows = slide_window(image2, x_start_stop=[None, None], y_start_stop=y_start_stop, 
+                    xy_window=(64, 64), xy_overlap=(0.875, 0.875)) 
+windows2 = slide_window(image2, x_start_stop=[None, None], y_start_stop=y_start_stop, 
+                    xy_window=(96, 96), xy_overlap=(0.875, 0.875))
+windows3 = slide_window(image2, x_start_stop=[None, None], y_start_stop=y_start_stop, 
+                    xy_window=(128, 128), xy_overlap=(0.875, 0.875)) 
+windows+=windows2
+windows+=windows3 
+window_img = draw_boxes(draw_image, windows, color=(0, 0, 255), thick=6)                    
+fig = plt.figure()
+plt.imshow(window_img)
+pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/window_img.png')
+
 
 
 
 # read in test image
 test_image = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/test_images/test3.jpg')
+#test_image = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Right/image0028.png')
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
+def find_cars(img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
     
     draw_img = np.copy(img)
+    #print(max(draw_img[:,1,0]))
     img = img.astype(np.float32)/255
     
     img_tosearch = img[ystart:ystop,:,:]
     ctrans_tosearch = convert_color(img_tosearch, conv='RGB2YCrCb')
-    #for scale in scales:
-    #print(scale)
-    if scale != 1:
-        imshape = ctrans_tosearch.shape
-        ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
-        
-    ch1 = ctrans_tosearch[:,:,0]
-    ch2 = ctrans_tosearch[:,:,1]
-    ch3 = ctrans_tosearch[:,:,2]
-
-    # Define blocks and steps as above
-    nxblocks = (ch1.shape[1] // pix_per_cell) - cell_per_block + 1
-    nyblocks = (ch1.shape[0] // pix_per_cell) - cell_per_block + 1 
-    #nfeat_per_block = orient*cell_per_block**2
-    
-    # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
-    window = 64
-    nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
-    cells_per_step = 2  # Instead of overlap, define how many cells to step
-    nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
-    nysteps = (nyblocks - nblocks_per_window) // cells_per_step
-    
-    # Compute individual channel HOG features for the entire image
-    hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
-    hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
-    hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
     box_list=[]
-    for xb in range(nxsteps):
-        for yb in range(nysteps):
-            ypos = yb*cells_per_step
-            xpos = xb*cells_per_step
-            # Extract HOG for this patch
-            hog_feat1 = hog1[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
-            hog_feat2 = hog2[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
-            hog_feat3 = hog3[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
-            hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
-
-            xleft = xpos*pix_per_cell
-            ytop = ypos*pix_per_cell
-
-            # Extract the image patch
-            subimg = cv2.resize(ctrans_tosearch[ytop:ytop+window, xleft:xleft+window], (64,64))
-          
-            # Get color features
-            spatial_features = bin_spatial(subimg, size=spatial_size)
-            hist_features = color_hist(subimg, nbins=hist_bins)
-            #print(np.shape(spatial_features),np.shape(hist_features),np.shape(hog_features))
-            #print(np.shape(np.hstack((spatial_features, hist_features, hog_features))))
-            #print(len(X_scaler.scale_))
-            # Scale features and make a prediction
-            test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))    
-            #test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))    
-            test_prediction = svc.predict(test_features)
+    for scale in scales:
+        #print(scale)
+        if scale != 1:
+            imshape = ctrans_tosearch.shape
+            ctrans_tosearch = cv2.resize(ctrans_tosearch, (np.int(imshape[1]/scale), np.int(imshape[0]/scale)))
             
-            if test_prediction == 1:
-                xbox_left = np.int(xleft*scale)
-                ytop_draw = np.int(ytop*scale)
-                win_draw = np.int(window*scale)
-                cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
-                # Append window position to list
-                box_list.append(((xbox_left, ytop_draw+ystart), (xbox_left+win_draw,ytop_draw+win_draw+ystart)))
-            
+        ch1 = ctrans_tosearch[:,:,0]
+        ch2 = ctrans_tosearch[:,:,1]
+        ch3 = ctrans_tosearch[:,:,2]
+    
+        # Define blocks and steps as above
+        nxblocks = (ch1.shape[1] // pix_per_cell) - cell_per_block + 1
+        nyblocks = (ch1.shape[0] // pix_per_cell) - cell_per_block + 1 
+        #nfeat_per_block = orient*cell_per_block**2
+        
+        # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
+        window = 64
+        nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
+        cells_per_step = 1  # Instead of overlap, define how many cells to step
+        nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
+        nysteps = (nyblocks - nblocks_per_window) // cells_per_step
+        
+        # Compute individual channel HOG features for the entire image
+        hog1 = get_hog_features(ch1, orient, pix_per_cell, cell_per_block, feature_vec=False)
+        hog2 = get_hog_features(ch2, orient, pix_per_cell, cell_per_block, feature_vec=False)
+        hog3 = get_hog_features(ch3, orient, pix_per_cell, cell_per_block, feature_vec=False)
+        
+        for xb in range(nxsteps):
+            for yb in range(nysteps):
+                ypos = yb*cells_per_step
+                xpos = xb*cells_per_step
+                # Extract HOG for this patch
+                hog_feat1 = hog1[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
+                hog_feat2 = hog2[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
+                hog_feat3 = hog3[ypos:ypos+nblocks_per_window, xpos:xpos+nblocks_per_window].ravel() 
+                hog_features = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+    
+                xleft = xpos*pix_per_cell
+                ytop = ypos*pix_per_cell
+    
+                # Extract the image patch
+                subimg = cv2.resize(ctrans_tosearch[ytop:ytop+window, xleft:xleft+window], (64,64))
+              
+                # Get color features
+                spatial_features = bin_spatial(subimg, size=spatial_size)
+                hist_features = color_hist(subimg, nbins=hist_bins)
+                #print(np.shape(spatial_features),np.shape(hist_features),np.shape(hog_features))
+                #print(np.shape(np.hstack((spatial_features, hist_features, hog_features))))
+                #print(len(X_scaler.scale_))
+                # Scale features and make a prediction
+                test_features = X_scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))    
+                #test_features = X_scaler.transform(np.hstack((shape_feat, hist_feat)).reshape(1, -1))    
+                test_prediction = svc.predict(test_features)
+                
+                if test_prediction == 1:
+                    xbox_left = np.int(xleft*scale)
+                    ytop_draw = np.int(ytop*scale)
+                    win_draw = np.int(window*scale)
+                    cv2.rectangle(draw_img,(xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart),(0,0,255),6) 
+                    # Append window position to list
+                    box_list.append(((xbox_left, ytop_draw+ystart), (xbox_left+win_draw,ytop_draw+win_draw+ystart)))
+                
     return draw_img,box_list
     
     
 ystart = 400
 ystop = 656
-scale = 1.5 #np.arange(1.3,2.0,0.1)
-
+scales = [1.0,1.5,2.0] #np.arange(1.3,2.0,0.1)
 #spatial_size=(32,32)
 #hist_bins=32
-out_img,box_list = find_cars(test_image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+out_img,box_list = find_cars(test_image, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
 
 plt.imshow(out_img)
 pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/sub_sample.png')
@@ -456,13 +481,16 @@ heat = np.zeros_like(image[:,:,0]).astype(np.float)
 def add_heat(heatmap, bbox_list):
     #bbox_list come from find_cars
     # Iterate through list of bboxes
+    #n=0
     for box in bbox_list:
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
         heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
-
+        #n+=1
+    #print(n)
     # Return updated heatmap
     return heatmap# Iterate through list of bboxes
+
     
 def apply_threshold(heatmap, threshold):
     # Zero out pixels below the threshold
@@ -490,16 +518,22 @@ def draw_labeled_bboxes(img, labels):
 
 heat = add_heat(heat,box_list)
 # Add heat to each box in box list
+#plt.imshow(heat)
+#pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/heatmap_addheat.png')
 
 # Apply threshold to help remove false positives
 heat = apply_threshold(heat,2)
+#plt.imshow(heat)
+#pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/heatmap_after_thresh.png')
 
 # Visualize the heatmap when displaying    
 heatmap = np.clip(heat, 0, 255)
+#plt.imshow(heatmap)
+#pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/heatmap_after_clip.png')
 
 # Find final boxes from heatmap using label function
 labels = label(heatmap)
-print(labels[1])
+#print(labels[1])
 draw_img = draw_labeled_bboxes(np.copy(test_image), labels)
 
 fig = plt.figure()
@@ -517,10 +551,10 @@ pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/CarPos_and_Heat
 
 
 def process_image(in_img):
-    out_img,box_list=find_cars(in_img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    out_img,box_list=find_cars(in_img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
     heat = np.zeros_like(out_img[:,:,0]).astype(np.float)
     heat = add_heat(heat,box_list)
-    heat = apply_threshold(heat,2)
+    heat = apply_threshold(heat,4)
     heatmap = np.clip(heat, 0, 255)
     labels = label(heatmap)
     draw_img = draw_labeled_bboxes(np.copy(in_img), labels)
@@ -529,8 +563,8 @@ def process_image(in_img):
 
 
 from moviepy.editor import VideoFileClip
-clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4")
+clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4")#.subclip(29,33)
 out_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
-video_output = '/Users/dai/CarND-Vehicle-Detection/output_images/out_project_video.mp4'
+video_output = '/Users/dai/CarND-Vehicle-Detection/out_project_video.mp4'
 out_clip.write_videofile(video_output, audio=False)
 
