@@ -50,7 +50,8 @@ I tried various combinations of parameters and decided to use `orientations=9`, 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
 I trained a linear SVM using HOG features and color features (color binning features and color histogram features) of 6000 vehicles' and 8800 non-vehicles' images with size 64x64.The images come from datasets downloaded from the course site plus cutouts from the project video.
-The code for this step is contained in lines 259 through 326 of the file called `pipeline.py`.  
+I used GridSearchCV to tweak the parameter of LinearSVC and come up with a C=0.001 for best performance.
+The code for this step is contained in lines 262 through 340 of the file called `pipeline.py`.  
 
 ### Sliding Window Search
 
@@ -62,7 +63,7 @@ I decided to search window positions by window size 64x64, 96x96, 128x128 (reali
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on 1.0, 1.5 and 2.0 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an accurate result of vehicle detection.  Here are some example images:
+Ultimately I searched on 1.0, 1.5, 2.0 and 3.0 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an accurate result of vehicle detection.  Here are some example images:
 
 ![alt text][image4]
 ---
