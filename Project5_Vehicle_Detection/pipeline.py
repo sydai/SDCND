@@ -10,7 +10,9 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from scipy.ndimage.measurements import label
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from collections import deque
+import pickle
 
 
 #########################lesson_functions#################################
@@ -258,11 +260,11 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     
 #os.chdir(r'/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/')
 cars=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/video_extracted/*.png')
+cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/*.png')
 cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Right/*.png')
 cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Far/*.png')
 cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Left/*.png')
 cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_MiddleClose/*.png')
-cars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/vehicles/KITTI_extracted/*.png')
 #os.chdir(r'/Users/dai/CarND-Vehicle-Detection/non-vehicles/Extras/')
 notcars=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/video_extracted/*.png')
 notcars+=glob.glob('/Users/dai/CarND-Vehicle-Detection/non-vehicles/GTI/*.png')
@@ -272,7 +274,7 @@ print(len(cars),cars[0])
 print(len(notcars),notcars[0])
 
 # Reduce the sample size
-sample_size = 9000
+sample_size = 10000
 cars = cars[0:sample_size]
 notcars = notcars[0:sample_size]
 
@@ -312,7 +314,7 @@ scaled_X = X_scaler.transform(X)
 y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
 
 # Split up data into randomized training and test sets
-rand_state = np.random.randint(0, 100)
+rand_state = None#np.random.randint(0, 100)
 X_train, X_test, y_train, y_test = train_test_split(
     scaled_X, y, test_size=0.2, random_state=rand_state)
 
@@ -320,7 +322,13 @@ print('Using:',orient,'orientations',pix_per_cell,
     'pixels per cell and', cell_per_block,'cells per block')
 print('Feature vector length:', len(X_train[0]))
 # Use a linear SVC 
-svc = LinearSVC(C=0.1)
+parameters = {'C':[0.1,0.05,0.01,0.005,0.001]}
+svr = LinearSVC()
+clf = GridSearchCV(svr, parameters)
+clf.fit(X_train, y_train)
+best_C=clf.best_params_['C']
+svc = LinearSVC(C=best_C)
+print(best_C)
 # Check the training time for the SVC
 t=time.time()
 svc.fit(X_train, y_train)
@@ -387,7 +395,7 @@ pyplot.savefig('/Users/dai/CarND-Vehicle-Detection/output_images/window_img.png'
 
 
 # read in test image
-test_image = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/test_images/test3.jpg')
+test_image = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/test_images/test4.jpg')
 #test_image = mpimg.imread('/Users/dai/CarND-Vehicle-Detection/vehicles/GTI_Right/image0028.png')
 # Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins):
@@ -465,8 +473,8 @@ def find_cars(img, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, c
     
     
 ystart = 400
-ystop = 656
-scales = [1.0,1.5,2.0] #np.arange(1.3,2.0,0.1)
+ystop = 670
+scales = [1.0,1.5,2.0,3.0] #np.arange(1.3,2.0,0.1)
 #spatial_size=(32,32)
 #hist_bins=32
 out_img,box_list = find_cars(test_image, ystart, ystop, scales, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
@@ -559,16 +567,27 @@ def process_image(in_img):
     history.append(heat)
     #print(np.shape(history))
     history_avg=np.mean(history,axis=0)
-    heat = apply_threshold(history_avg,8)
+    heat = apply_threshold(history_avg,4)
     heatmap = np.clip(heat, 0, 255)
     labels = label(heatmap)
     draw_img = draw_labeled_bboxes(np.copy(in_img), labels)
-    
     return draw_img
 
 
+
+a = {'classifier': svc, 'X_scaler': X_scaler,
+     'color_space':'YCrCb', 'orient':9,
+     'pix_per_cell':8, 'cell_per_block':2,'spatial_size':(32,32),'hist_bins':32, 
+     'ystart':400, 'ystop':670, 'scales':[1.0,1.5,2.0,3.0]}
+
+with open('/Users/dai/CarND-Vehicle-Detection/train_parameter.pickle', 'wb') as handle:
+    pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+
 from moviepy.editor import VideoFileClip
-clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4")#.subclip(27,29)
+clip1 = VideoFileClip("/Users/dai/CarND-Vehicle-Detection/project_video.mp4").subclip(27,30)
 out_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 video_output = '/Users/dai/CarND-Vehicle-Detection/out_project_video.mp4'
 out_clip.write_videofile(video_output, audio=False)
