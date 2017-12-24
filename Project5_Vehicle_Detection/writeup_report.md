@@ -32,7 +32,7 @@ You're reading it!
 
 The code for this step is contained in lines 25 through 42 of the file called `pipeline.py`.  
 
-I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
+I started by reading in all the `vehicle` and `non-vehicle` images (9000 for each category).  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
 
@@ -50,7 +50,8 @@ I tried various combinations of parameters and decided to use `orientations=9`, 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
 I trained a linear SVM using HOG features and color features (color binning features and color histogram features) of 6000 vehicles' and 8800 non-vehicles' images with size 64x64.The images come from datasets downloaded from the course site plus cutouts from the project video.
-The code for this step is contained in lines 259 through 326 of the file called `pipeline.py`.  
+I used GridSearchCV to tweak the parameter of LinearSVC and come up with a C=0.001 for best performance.
+The code for this step is contained in lines 262 through 340 of the file called `pipeline.py`.  
 
 ### Sliding Window Search
 
@@ -62,7 +63,7 @@ I decided to search window positions by window size 64x64, 96x96, 128x128 (reali
 
 #### 2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on 1.0, 1.5 and 2.0 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an accurate result of vehicle detection.  Here are some example images:
+Ultimately I searched on 1.0, 1.5, 2.0 and 3.0 scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided an accurate result of vehicle detection.  Here are some example images:
 
 ![alt text][image4]
 ---
@@ -76,6 +77,10 @@ Here's a [link to my video result](./out_project_video.mp4)
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+
+I implemented collections.deque for saving a history of 8 heatmaps and then calculated a moving average of heatmaps for thresholding. In this way, many false positives were eleminated and resulted in more stable bounding boxes.
+
+Another method to reduce false positives was using cutouts of the output video where false detection happened in previous training and duplicated these cutouts to certain multifold amount then included in current training data.
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
@@ -92,5 +97,5 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
 
-The performance of the vehicle detection on project video was initially not so good. Even though the classifier accuracy on the test datasets reached 99.5% (later figured out because of overfitting), when giving a test image to the find_cars() function the detection of vehicles failed most of the times in the video. Due to time constraint, the previous final output video actually missed detections of many vehicles and output many false positives. After implementing the advice from first submission, the final output video showed correct detection of other vehicles with only a few false positives occasionally.
+The performance of the vehicle detection on project video was initially not so good. Even though the classifier accuracy on the test datasets reached 99.5% (later figured out because of overfitting), when giving a test image to the find_cars() function the detection of vehicles failed most of the times in the video. Due to time constraint, the previous final output video actually missed detections of many vehicles and output many false positives. After implementing the advice from first submission, the final output video showed correct detection of other vehicles with only a few false positives occasionally. For the 4th submission after implementing a moving average method, the false positives were effectively reduced. But somehow the true detections seem not as good as before due to raising of the threshold value (for rejecting false positives).
 
