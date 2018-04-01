@@ -86,7 +86,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
-    //ekf_.x_ << 1, 1, 1, 1;
+    ekf_.x_ << 1, 1, 0, 0;
 
     float rho, phi, rhodot, x, y, px, py;
 
@@ -113,6 +113,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Initialize state.
       */
+	    if (fabs(px) < 0.0001 and fabs(py) < 0.0001){
+	    		ekf_.x_(0) = 0.0001;
+	    		ekf_.x_(1) = 0.0001;
+	    	}
+	    	//state covariance matrix P
+	        ekf_.P_ = MatrixXd(4, 4);
+	        ekf_.P_ << 1, 0, 0, 0,
+	    			   0, 1, 0, 0,
+	    			   0, 0, 1000, 0,
+	    			   0, 0, 0, 1000;
     		ekf_.x_(0)= px;
     		ekf_.x_(1)= py;
     }
