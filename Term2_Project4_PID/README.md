@@ -1,6 +1,22 @@
 # CarND-Controls-PID
 Self-Driving Car Engineer Nanodegree Program
 
+
+## Rubric Points:
+- *Describe the effect each of the P, I, D components had in your implementation.
+
+PID controller in case of controlling steer angle operates in such a way:
+
+P component sets control which is proportional to the cte (cross track error i.e. how far is the vehicle away from the center point of the lane). In reality, if the direction of steer is opposite to the direction of deviation of the vehicle from the central lane. The strength of the steer is based on amount of deviation.
+
+I component sets control on the accumulated cte and effectively reduce the effect of any bias existed in the system which causes a deviation of the vehilce from the central lane even at steady state if without I control.
+
+D component sets control on the change in cte. If without D component, the vehicle will oscillate dramatically around the central lane due to P control.
+
+- *Describe how the final hyperparameters were chosen.*
+
+In initial stage, twiddle did not come to work but manual tuning of PID parameters was applied to roughly keep the car in the central lane. This is because if the vehicle keeps running off the lane, there's no point in using twiddle since the vehicle will stuck at curb and no meaningful update of cte. After manually adjust the P, I, D parameters to {0.1, 0.01, 3}, twiddle comes in to fine tune these parameters until the sum of change in each parameter reduces to 0.01. After twiddle completes, the final set of parameters settle down to {0.11, 0.011, 2.99324}. The vehicle was able to keep to the central lane around the track.
+
 ---
 
 ## Dependencies
