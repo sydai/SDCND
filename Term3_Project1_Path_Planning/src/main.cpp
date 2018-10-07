@@ -415,7 +415,7 @@ int main() {
               ptsx.push_back(ref_x);
               ptsy.push_back(ref_y);
 
-            }
+            } // 2 points in ptsx, ptsy
 
             // In Frenet add evenly 30m spaced points ahead of the starting reference, using "lane" variable here
             vector<double> next_wp0 = getXY(car_s + 30, (2+4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -429,9 +429,9 @@ int main() {
             ptsy.push_back(next_wp1[1]);
 
             ptsx.push_back(next_wp2[0]);
-            ptsy.push_back(next_wp2[1]);
+            ptsy.push_back(next_wp2[1]); // 5 points in ptsx, ptsy
 
-            // transform ptsx, ptsy to local reference frame of ego vehicle
+            // transform ptsx, ptsy to local reference frame of ego vehicle to avoid vertical case in constructing spline
             for (int i = 0; i < ptsx.size();  i++ ){
               //shift car reference angle to 0 degree
               double shift_x = ptsx[i] - ref_x;
@@ -457,16 +457,17 @@ int main() {
             //cout << endl;
 
             // calculate how to break up spline points so that we travel at our desired ref velocity
-            double target_x = 30.0;
+            double target_x = 30.0; // (in meter) horizontal axis of trangle
             double target_y = s(target_x);
-            double target_dist = sqrt(target_x*target_x + target_y*target_y );
+            double target_dist = sqrt(target_x*target_x + target_y*target_y ); // hypotenuse of triangle
 
             double x_add_on = 0;
 
             // fill up rest of path planner after filling it with previos points, always output 50 points:
             //cout << "New points after previous_path_x: " << endl;
             for (int i = 0; i <= 50-previous_path_x.size(); i++) {
-              double N = (target_dist/(.02*ref_vel/2.24)); // 2.24 is to convert from vel from mph to m/s
+              // divide dist into N segments
+              double N = (target_dist/(.02*ref_vel/2.24)); // 2.24 is to convert vel from mph to m/s
               double x_point = x_add_on + (target_x)/N;
               double y_point = s(x_point);
 
@@ -475,7 +476,7 @@ int main() {
                double x_ref = x_point;
                double y_ref = y_point;
 
-               // rotate back to normal after rotating it earlier
+               // transform back to global frame after transforming it earlier to local frame
                x_point = (x_ref * cos(ref_yaw) - y_ref * sin(ref_yaw));
                y_point = (x_ref * sin(ref_yaw) + y_ref * cos(ref_yaw));
 
@@ -485,8 +486,6 @@ int main() {
                next_x_vals.push_back(x_point);
                next_y_vals.push_back(y_point);
                //cout << x_point << " ";
-
-
             }
             //cout << endl;
 
